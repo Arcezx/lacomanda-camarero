@@ -1,0 +1,19 @@
+<div class="login-container">
+  <div class="login-card">
+  <img src="/logo-camarero.png" alt="LaComanda - Panel de camarero" class="logo-login" />
+
+    <form (ngSubmit)="iniciarSesion()">
+      <label>Usuario</label>
+      <input type="text" [(ngModel)]="username" name="username" required />
+
+      <label>Contraseña</label>
+      <input type="password" [(ngModel)]="password" name="password" required />
+
+      <p class="error" *ngIf="error">{{ error }}</p>
+
+      <button type="submit" [disabled]="cargando">
+        {{ cargando ? 'Entrando...' : 'Entrar' }}
+      </button>
+    </form>
+  </div>
+</div>
