@@ -4,4 +4,5 @@ export interface Mesa {
   capacidad: number;
   qrCode: string;
   ocupada: boolean;
+  sesionActual: string | null;
 }

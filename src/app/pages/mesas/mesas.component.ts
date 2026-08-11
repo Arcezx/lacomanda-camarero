@@ -37,7 +37,7 @@ interface Posicion {
   ],
 })
 export class MesasComponent implements OnInit, OnDestroy {
-  mesaSeleccionada: MesaConEstado | null = null;
+  mesaSeleccionadaId: number | null = null;
 
   modoOscuro = signal(localStorage.getItem('modo_oscuro') === 'true');
 
@@ -60,6 +60,11 @@ export class MesasComponent implements OnInit, OnDestroy {
     public authService: AuthService,
     private router: Router
   ) {}
+
+  get mesaSeleccionada(): MesaConEstado | null {
+    if (this.mesaSeleccionadaId === null) return null;
+    return this.mesasService.mesasConEstado().find((m) => m.id === this.mesaSeleccionadaId) ?? null;
+  }
 
   ngOnInit() {
     this.pedidosService.cargarPedidosIniciales();
@@ -116,28 +121,6 @@ export class MesasComponent implements OnInit, OnDestroy {
     return 'nivel-alto';
   }
 
-  seleccionarMesa(mesa: MesaConEstado) {
-    this.mesaSeleccionada = mesa;
-  }
-
-  cerrarDetalle() {
-    this.mesaSeleccionada = null;
-  }
-
-  alternarOcupacion() {
-    if (!this.mesaSeleccionada) return;
-
-    const nuevoEstado = !this.mesaSeleccionada.ocupada;
-
-    this.mesasService.cambiarOcupacion(this.mesaSeleccionada.id, nuevoEstado).subscribe({
-      next: () => {
-        this.mesasService.actualizarMesaLocal(this.mesaSeleccionada!.id, nuevoEstado);
-        this.mesaSeleccionada = { ...this.mesaSeleccionada!, ocupada: nuevoEstado };
-      },
-      error: (err) => console.error('Error al cambiar ocupación', err),
-    });
-  }
-
   todosServidos(mesa: MesaConEstado): boolean {
     if (mesa.pedidosDeLaMesa.length === 0) return false;
     return mesa.pedidosDeLaMesa.every((p) => p.estado === 'ENVIADO');
@@ -147,12 +130,38 @@ export class MesasComponent implements OnInit, OnDestroy {
     return mesa.pedidosDeLaMesa.reduce((suma, p) => suma + p.total, 0);
   }
 
+  seleccionarMesa(mesa: MesaConEstado) {
+    this.mesaSeleccionadaId = mesa.id;
+  }
+
+  cerrarDetalle() {
+    this.mesaSeleccionadaId = null;
+  }
+
+  alternarOcupacion() {
+    if (!this.mesaSeleccionada) return;
+
+    const nuevoEstado = !this.mesaSeleccionada.ocupada;
+    const id = this.mesaSeleccionada.id;
+
+    this.mesasService.cambiarOcupacion(id, nuevoEstado).subscribe({
+      next: () => {
+        this.mesasService.actualizarMesaLocal(id, nuevoEstado);
+      },
+      error: (err) => console.error('Error al cambiar ocupación', err),
+    });
+  }
+
   pagarCuenta() {
     if (!this.mesaSeleccionada) return;
 
-    this.mesasService.cambiarOcupacion(this.mesaSeleccionada.id, false).subscribe({
+    const id = this.mesaSeleccionada.id;
+    const numeroMesa = this.mesaSeleccionada.numero;
+
+    this.mesasService.cambiarOcupacion(id, false).subscribe({
       next: () => {
-        this.mesasService.actualizarMesaLocal(this.mesaSeleccionada!.id, false);
+        this.mesasService.actualizarMesaLocal(id, false);
+        this.pedidosService.quitarPedidosDeMesa(numeroMesa);
         this.cerrarDetalle();
       },
       error: (err) => console.error('Error al pagar/liberar mesa', err),
@@ -164,7 +173,6 @@ export class MesasComponent implements OnInit, OnDestroy {
     this.router.navigate(['/tomar-pedido', this.mesaSeleccionada.id, this.mesaSeleccionada.numero]);
   }
 
-  
   logout() {
     this.authService.logout();
   }

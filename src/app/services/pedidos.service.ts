@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, NgZone } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
@@ -10,6 +10,7 @@ export interface Pedido {
   fecha: string;
   formaPago: 'TARJETA' | 'EFECTIVO';
   mesaNumero?: number;
+  sesionMesaId?: string | null;
   domicilio?: { id: number; direccion: string; estado: string };
   lineas: {
     id: number;
@@ -48,7 +49,7 @@ export class PedidosService {
 
   private stompClient: Client | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private zone: NgZone) {}
 
   cargarPedidosIniciales() {
     this.http.get<Pedido[]>(`${API_URL}/pedidos`).subscribe({
@@ -68,14 +69,18 @@ export class PedidosService {
       onConnect: () => {
         this.stompClient!.subscribe('/topic/pedidos', (mensaje) => {
           const pedidoNuevo: Pedido = JSON.parse(mensaje.body);
-          this.pedidos.update((actuales) => [pedidoNuevo, ...actuales]);
+          this.zone.run(() => {
+            this.pedidos.update((actuales) => [pedidoNuevo, ...actuales]);
+          });
         });
 
         this.stompClient!.subscribe('/topic/pedidos-actualizados', (mensaje) => {
           const pedidoActualizado: Pedido = JSON.parse(mensaje.body);
-          this.pedidos.update((actuales) =>
-            actuales.map((p) => (p.id === pedidoActualizado.id ? pedidoActualizado : p))
-          );
+          this.zone.run(() => {
+            this.pedidos.update((actuales) =>
+              actuales.map((p) => (p.id === pedidoActualizado.id ? pedidoActualizado : p))
+            );
+          });
         });
       },
     });
@@ -96,5 +101,13 @@ export class PedidosService {
 
   crearPedido(pedido: PedidoRequest) {
     return this.http.post<Pedido>(`${API_URL}/pedidos`, pedido);
+  }
+
+  quitarPedidosDeMesa(mesaNumero: number) {
+    this.zone.run(() => {
+      this.pedidos.update((actuales) =>
+        actuales.filter((p) => !(p.tipo === 'LOCAL' && p.mesaNumero === mesaNumero))
+      );
+    });
   }
 }

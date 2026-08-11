@@ -20,9 +20,10 @@ export class MesasService {
     const pedidos = this.pedidosService.listaPedidos();
 
     return this.mesas().map((mesa) => {
-     
-      const pedidosDeLaMesa = mesa.ocupada
-        ? pedidos.filter((p) => p.tipo === 'LOCAL' && p.mesaNumero === mesa.numero)
+      const pedidosDeLaMesa = mesa.sesionActual
+        ? pedidos.filter(
+            (p) => p.tipo === 'LOCAL' && p.sesionMesaId === mesa.sesionActual
+          )
         : [];
 
       const pedidoActivo = pedidosDeLaMesa.find((p) => p.estado !== 'ENVIADO');
@@ -36,7 +37,6 @@ export class MesasService {
       };
     });
   });
-
   constructor(
     private http: HttpClient,
     private pedidosService: PedidosService
