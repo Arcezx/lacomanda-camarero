@@ -24,6 +24,18 @@ export interface Pedido {
   total: number;
 }
 
+export interface PedidoRequest {
+  tipo: 'LOCAL' | 'DOMICILIO';
+  mesaId?: number;
+  formaPago: 'TARJETA' | 'EFECTIVO';
+  lineas: {
+    productoId: number;
+    cantidad: number;
+    notas: string;
+    extras: { extraId: number; cantidad: number }[];
+  }[];
+}
+
 const API_URL = 'http://localhost:8090/api';
 const WS_URL = 'http://localhost:8090/ws';
 
@@ -80,5 +92,9 @@ export class PedidosService {
       `${API_URL}/pedidos/${pedidoId}/estado?nuevoEstado=${nuevoEstado}`,
       null
     );
+  }
+
+  crearPedido(pedido: PedidoRequest) {
+    return this.http.post<Pedido>(`${API_URL}/pedidos`, pedido);
   }
 }

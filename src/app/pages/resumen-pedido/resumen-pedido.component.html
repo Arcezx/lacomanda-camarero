@@ -1,0 +1,46 @@
+<div class="pagina-header">
+  <button class="boton-volver" (click)="volverACategorias()">← Seguir pidiendo</button>
+  <h1>Mesa {{ mesaNumero }} — Resumen</h1>
+</div>
+
+<div class="resumen-contenido">
+  <div *ngIf="carritoService.lineasCarrito().length === 0" class="vacio-mensaje">
+    <p>Aún no has añadido nada. Vuelve a la carta para empezar.</p>
+  </div>
+
+  <div class="linea-item" *ngFor="let linea of carritoService.lineasCarrito()">
+    <img [src]="linea.producto.foto" [alt]="linea.producto.nombreEs" class="linea-imagen" />
+
+    <div class="linea-info">
+      <h4>{{ linea.cantidad }}x {{ linea.producto.nombreEs }}</h4>
+
+      <p *ngIf="linea.extras.length > 0" class="linea-extras">
+        <span *ngFor="let e of linea.extras; let last = last">
+          +{{ e.cantidad }} {{ e.extra.nombre }}<span *ngIf="!last">, </span>
+        </span>
+      </p>
+
+      <p *ngIf="linea.nota" class="linea-nota">"{{ linea.nota }}"</p>
+
+      <span class="linea-precio">{{ carritoService.calcularSubtotal(linea).toFixed(2) }} €</span>
+    </div>
+
+    <button class="boton-eliminar" (click)="eliminar(linea.id)">✕</button>
+  </div>
+
+  <div class="resumen-total" *ngIf="carritoService.lineasCarrito().length > 0">
+    <span>Total</span>
+    <span>{{ carritoService.totalPrecio().toFixed(2) }} €</span>
+  </div>
+
+  <p class="error-mensaje" *ngIf="error">{{ error }}</p>
+
+  <button
+    class="boton-confirmar-pedido"
+    *ngIf="carritoService.lineasCarrito().length > 0"
+    [disabled]="enviando"
+    (click)="confirmarPedido()"
+  >
+    {{ enviando ? 'Enviando...' : 'Confirmar pedido a cocina' }}
+  </button>
+</div>

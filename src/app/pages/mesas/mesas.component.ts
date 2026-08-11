@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { trigger, transition, style, animate, stagger, query } from '@angular/animations';
@@ -39,18 +39,20 @@ interface Posicion {
 export class MesasComponent implements OnInit, OnDestroy {
   mesaSeleccionada: MesaConEstado | null = null;
 
-private posiciones: Record<number, Posicion> = {
-  1: { left: 6, top: 20 },
-  2: { left: 24, top: 20 },
-  3: { left: 42, top: 20 },
-  4: { left: 58, top: 20 },
-  5: { left: 6, top: 55 },
-  6: { left: 26, top: 55 },
-  7: { left: 46, top: 55 },
-  8: { left: 62, top: 55 },
-  9: { left: 38, top: 82 },
-  10: { left: 78, top: 82 },
-};
+  modoOscuro = signal(localStorage.getItem('modo_oscuro') === 'true');
+
+  private posiciones: Record<number, Posicion> = {
+    1: { left: 6, top: 20 },
+    2: { left: 24, top: 20 },
+    3: { left: 42, top: 20 },
+    4: { left: 58, top: 20 },
+    5: { left: 6, top: 55 },
+    6: { left: 26, top: 55 },
+    7: { left: 46, top: 55 },
+    8: { left: 62, top: 55 },
+    9: { left: 38, top: 82 },
+    10: { left: 78, top: 82 },
+  };
 
   constructor(
     public mesasService: MesasService,
@@ -63,10 +65,18 @@ private posiciones: Record<number, Posicion> = {
     this.pedidosService.cargarPedidosIniciales();
     this.pedidosService.conectarTiempoReal();
     this.mesasService.cargarMesas();
+    document.body.classList.toggle('modo-oscuro', this.modoOscuro());
   }
 
   ngOnDestroy() {
     this.pedidosService.desconectar();
+  }
+
+  alternarModoOscuro() {
+    const nuevoValor = !this.modoOscuro();
+    this.modoOscuro.set(nuevoValor);
+    localStorage.setItem('modo_oscuro', String(nuevoValor));
+    document.body.classList.toggle('modo-oscuro', nuevoValor);
   }
 
   obtenerPosicion(numero: number): Posicion {
@@ -74,16 +84,36 @@ private posiciones: Record<number, Posicion> = {
   }
 
   esMesaGrande(capacidad: number): boolean {
-  return capacidad >= 10;
+    return capacidad >= 10;
   }
-  obtenerImagenMesa(capacidad: number): string {
-    if (capacidad <= 2) return '/mesa-2personas.png';
-    if (capacidad <= 4) return '/mesa-4personas.png';
-    if (capacidad <= 6) return '/mesa-6personas.png';
-    return '/mesa-10personas.png';
+
+  esMesaMediana(capacidad: number): boolean {
+    return capacidad === 4;
   }
+
+  obtenerImagenMesa(capacidad: number, ocupada: boolean): string {
+    const prefijo = ocupada ? 'mesaOcupada' : 'mesaLibre';
+
+    if (capacidad <= 2) return `/${prefijo}-2personas.png`;
+    if (capacidad <= 4) return `/${prefijo}-4personas.png`;
+    if (capacidad <= 6) return `/${prefijo}-6personas.png`;
+    return `/${prefijo}-10personas.png`;
+  }
+
   contarOcupadas(): number {
     return this.mesasService.mesasConEstado().filter((m) => m.ocupada).length;
+  }
+
+  colorResumen(): string {
+    const total = this.mesasService.mesasConEstado().length;
+    if (total === 0) return '';
+
+    const ocupadas = this.contarOcupadas();
+    const porcentaje = ocupadas / total;
+
+    if (porcentaje < 0.5) return 'nivel-bajo';
+    if (porcentaje < 0.8) return 'nivel-medio';
+    return 'nivel-alto';
   }
 
   seleccionarMesa(mesa: MesaConEstado) {
@@ -108,6 +138,33 @@ private posiciones: Record<number, Posicion> = {
     });
   }
 
+  todosServidos(mesa: MesaConEstado): boolean {
+    if (mesa.pedidosDeLaMesa.length === 0) return false;
+    return mesa.pedidosDeLaMesa.every((p) => p.estado === 'ENVIADO');
+  }
+
+  totalCuenta(mesa: MesaConEstado): number {
+    return mesa.pedidosDeLaMesa.reduce((suma, p) => suma + p.total, 0);
+  }
+
+  pagarCuenta() {
+    if (!this.mesaSeleccionada) return;
+
+    this.mesasService.cambiarOcupacion(this.mesaSeleccionada.id, false).subscribe({
+      next: () => {
+        this.mesasService.actualizarMesaLocal(this.mesaSeleccionada!.id, false);
+        this.cerrarDetalle();
+      },
+      error: (err) => console.error('Error al pagar/liberar mesa', err),
+    });
+  }
+
+  irATomarPedido() {
+    if (!this.mesaSeleccionada) return;
+    this.router.navigate(['/tomar-pedido', this.mesaSeleccionada.id, this.mesaSeleccionada.numero]);
+  }
+
+  
   logout() {
     this.authService.logout();
   }

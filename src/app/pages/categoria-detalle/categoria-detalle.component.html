@@ -1,0 +1,37 @@
+<div class="pagina-header">
+  <button class="boton-volver" (click)="volver()">← Volver</button>
+  <h1>{{ categoria?.nombreEs }}</h1>
+</div>
+
+<div class="grid-productos" *ngIf="categoria">
+  <div
+    class="producto-card"
+    [class.agotado]="!producto.disponible"
+    *ngFor="let producto of productos"
+    (click)="producto.disponible && abrirModal(producto)"
+  >
+    <div class="producto-imagen-wrapper">
+      <img [src]="producto.foto" [alt]="producto.nombreEs" class="producto-imagen" />
+      <div class="overlay-agotado" *ngIf="!producto.disponible">
+        <span>Agotado</span>
+      </div>
+    </div>
+    <div class="producto-info">
+      <h3>{{ producto.nombreEs }}</h3>
+      <p class="producto-descripcion">{{ producto.descripcionEs }}</p>
+      <span class="producto-precio">{{ producto.precio.toFixed(2) }} €</span>
+    </div>
+  </div>
+</div>
+
+<div class="boton-resumen-wrapper" *ngIf="carritoService.totalUnidades() > 0">
+  <button class="boton-resumen" (click)="irAResumen()">
+    Ver pedido ({{ carritoService.totalUnidades() }}) · {{ carritoService.totalPrecio().toFixed(2) }} €
+  </button>
+</div>
+
+<app-producto-modal
+  *ngIf="productoModalAbierto"
+  [producto]="productoModalAbierto"
+  (cerrar)="cerrarModal($event)"
+></app-producto-modal>

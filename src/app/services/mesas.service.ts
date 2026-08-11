@@ -5,6 +5,7 @@ import { PedidosService, Pedido } from './pedidos.service';
 
 export interface MesaConEstado extends Mesa {
   pedidoActivo: Pedido | null;
+  pedidosDeLaMesa: Pedido[];
 }
 
 const API_URL = 'http://localhost:8090/api';
@@ -19,13 +20,19 @@ export class MesasService {
     const pedidos = this.pedidosService.listaPedidos();
 
     return this.mesas().map((mesa) => {
-      const pedidoActivo = pedidos.find(
-        (p) => p.tipo === 'LOCAL' && p.mesaNumero === mesa.numero && p.estado !== 'ENVIADO'
-      );
+     
+      const pedidosDeLaMesa = mesa.ocupada
+        ? pedidos.filter((p) => p.tipo === 'LOCAL' && p.mesaNumero === mesa.numero)
+        : [];
+
+      const pedidoActivo = pedidosDeLaMesa.find((p) => p.estado !== 'ENVIADO');
+      const ocupadaReal = mesa.ocupada || !!pedidoActivo;
 
       return {
         ...mesa,
+        ocupada: ocupadaReal,
         pedidoActivo: pedidoActivo ?? null,
+        pedidosDeLaMesa,
       };
     });
   });

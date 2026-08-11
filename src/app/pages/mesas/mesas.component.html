@@ -1,7 +1,7 @@
 <div class="mesas-header">
   <div class="header-info">
     <h1>Mesas</h1>
-    <span class="resumen-ocupacion">{{ contarOcupadas() }} de {{ mesasService.mesasConEstado().length }} ocupadas</span>
+    <span class="resumen-ocupacion" [ngClass]="colorResumen()">{{ contarOcupadas() }} de {{ mesasService.mesasConEstado().length }} ocupadas</span>
   </div>
   <button class="boton-logout" (click)="logout()">Cerrar sesión</button>
 </div>
@@ -17,27 +17,36 @@
     <span>Entrada</span>
   </div>
 
-    <div
+  <div
     class="mesa-contenedor"
     [style.left.%]="obtenerPosicion(mesa.numero).left"
     [style.top.%]="obtenerPosicion(mesa.numero).top"
     *ngFor="let mesa of mesasService.mesasConEstado()"
     (click)="seleccionarMesa(mesa)"
-    >
+  >
     <span class="mesa-numero">Mesa {{ mesa.numero }}</span>
 
-    <div
-    class="mesa-forma"
-    [class.ocupada]="mesa.ocupada"
-    [class.mesa-grande]="esMesaGrande(mesa.capacidad)"
-    [style.background-image]="'url(' + obtenerImagenMesa(mesa.capacidad) + ')'"
-    >
-    <span class="mesa-punto-estado"></span>
-    </div>
+    <div class="mesa-forma" [class.mesa-grande]="esMesaGrande(mesa.capacidad)" [class.mesa-mediana]="esMesaMediana(mesa.capacidad)">
+      <div class="mesa-imagen mesa-imagen-libre" [style.background-image]="'url(' + obtenerImagenMesa(mesa.capacidad, false) + ')'" [style.opacity]="mesa.ocupada ? 0 : 1"></div>
+      <div class="mesa-imagen mesa-imagen-ocupada" [style.background-image]="'url(' + obtenerImagenMesa(mesa.capacidad, true) + ')'" [style.opacity]="mesa.ocupada ? 1 : 0"></div>
 
-    <span class="mesa-capacidad">{{ mesa.capacidad }} personas</span>
+      <div class="mesa-tooltip" *ngIf="mesa.ocupada && mesa.pedidoActivo as p">
+        <strong>{{ p.lineas.length }} producto{{ p.lineas.length === 1 ? '' : 's' }}</strong>
+        <span>{{ p.total.toFixed(2) }} €</span>
+      </div>
     </div>
+  </div>
+  <div class="leyenda">
+    <div class="leyenda-item">
+      <span class="leyenda-punto libre"></span>
+      <span>Libre</span>
     </div>
+    <div class="leyenda-item">
+      <span class="leyenda-punto ocupada"></span>
+      <span>Ocupada</span>
+    </div>
+  </div>
+</div>
 
 <div class="detalle-overlay" *ngIf="mesaSeleccionada" (click)="cerrarDetalle()">
   <div class="detalle-panel" [@entradaDetalle] (click)="$event.stopPropagation()">
@@ -57,23 +66,42 @@
       Esta mesa está libre, sin pedidos activos.
     </div>
 
-    <div *ngIf="mesaSeleccionada.ocupada && mesaSeleccionada.pedidoActivo as pedido" class="pedido-detalle">
-      <div class="pedido-detalle-estado">Estado: {{ pedido.estado }}</div>
-
-      <div class="linea" *ngFor="let linea of pedido.lineas">
-        <strong>{{ linea.cantidad }}x {{ linea.productoNombreEs }}</strong>
-        <div class="extras-chips" *ngIf="linea.extras.length > 0">
-          <span class="chip-extra" *ngFor="let e of linea.extras">+{{ e.nombre }}</span>
+    <div *ngIf="mesaSeleccionada.ocupada && mesaSeleccionada.pedidosDeLaMesa.length > 0" class="cuenta-mesa">
+      <div class="pedido-bloque" *ngFor="let pedido of mesaSeleccionada.pedidosDeLaMesa">
+        <div class="pedido-bloque-cabecera">
+          <span>Pedido #{{ pedido.id }}</span>
+          <span class="pedido-bloque-estado">{{ pedido.estado }}</span>
         </div>
-        <span *ngIf="linea.notas" class="linea-notas">"{{ linea.notas }}"</span>
+        <div class="linea" *ngFor="let linea of pedido.lineas">
+          <strong>{{ linea.cantidad }}x {{ linea.productoNombreEs }}</strong>
+          <div class="extras-chips" *ngIf="linea.extras.length > 0">
+            <span class="chip-extra" *ngFor="let e of linea.extras">+{{ e.nombre }}</span>
+          </div>
+          <span *ngIf="linea.notas" class="linea-notas">"{{ linea.notas }}"</span>
+        </div>
+        <div class="pedido-bloque-total">{{ pedido.total.toFixed(2) }} €</div>
       </div>
 
-      <div class="pedido-detalle-total">{{ pedido.total.toFixed(2) }} €</div>
-    </div>
+      <div class="cuenta-total-general">
+        <span>Total de la cuenta</span>
+        <span>{{ totalCuenta(mesaSeleccionada).toFixed(2) }} €</span>
+      </div>
 
-    <div *ngIf="mesaSeleccionada.ocupada && !mesaSeleccionada.pedidoActivo" class="mesa-libre-mensaje">
-      Esta mesa está marcada como ocupada manualmente, sin pedido asociado todavía.
+      <button
+        class="boton-pagar"
+        *ngIf="todosServidos(mesaSeleccionada)"
+        (click)="pagarCuenta()"
+      >
+        Pagar cuenta
+      </button>
+
+      <p class="mensaje-esperando" *ngIf="!todosServidos(mesaSeleccionada)">
+        Esperando a que todos los pedidos estén servidos para poder cobrar.
+      </p>
     </div>
+      <button class="boton-tomar-pedido" (click)="irATomarPedido()">
+        Tomar pedido
+      </button>
 
     <button class="boton-toggle-ocupacion" [class.liberar]="mesaSeleccionada.ocupada" (click)="alternarOcupacion()">
       {{ mesaSeleccionada.ocupada ? 'Liberar mesa' : 'Ocupar mesa' }}

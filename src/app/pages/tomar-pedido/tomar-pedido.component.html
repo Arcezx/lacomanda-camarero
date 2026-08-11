@@ -1,0 +1,21 @@
+<div class="pagina-header">
+  <button class="boton-volver" (click)="volver()">← Volver</button>
+  <h1>Mesa {{ mesaNumero }} — Tomar pedido</h1>
+</div>
+
+<div class="categorias-lista">
+  <div
+    class="categoria-barra"
+    [style.background-image]="'linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.55)), url(' + categoria.foto + ')'"
+    *ngFor="let categoria of categorias"
+    (click)="irACategoria(categoria.id)"
+  >
+    <span class="categoria-nombre">{{ categoria.nombreEs }}</span>
+  </div>
+</div>
+
+<div class="boton-resumen-wrapper" *ngIf="carritoService.totalUnidades() > 0">
+  <button class="boton-resumen" (click)="irAResumen()">
+    Ver pedido ({{ carritoService.totalUnidades() }}) · {{ carritoService.totalPrecio().toFixed(2) }} €
+  </button>
+</div>

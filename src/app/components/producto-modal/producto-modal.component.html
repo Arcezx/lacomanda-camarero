@@ -1,0 +1,58 @@
+<div class="modal-overlay" (click)="cerrarSinConfirmar()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-handle"></div>
+
+    <button class="boton-cerrar" (click)="cerrarSinConfirmar()">✕</button>
+
+    <img [src]="producto.foto" [alt]="producto.nombreEs" class="foto-grande" />
+
+    <div class="modal-body">
+      <h2>{{ producto.nombreEs }}</h2>
+      <p class="descripcion-completa">{{ producto.descripcionEs }}</p>
+
+      <div class="ingredientes-bloque" *ngIf="producto.ingredientes.length > 0">
+        <h3>Ingredientes</h3>
+        <p class="ingredientes-texto">{{ ingredientesFormateados }}</p>
+      </div>
+
+      <div class="extras-bloque" *ngIf="producto.extras.length > 0">
+        <h3>Personalizar</h3>
+        <div class="extra-item" *ngFor="let es of extrasSeleccionados">
+          <div class="extra-info">
+            <span class="extra-nombre">{{ es.extra.nombre }}</span>
+            <span class="extra-precio">+{{ es.extra.precio.toFixed(2) }} €</span>
+          </div>
+          <div class="selector-cantidad-extra">
+            <button (click)="disminuirExtra(es)" [disabled]="es.cantidad <= 0">−</button>
+            <span>{{ es.cantidad }}</span>
+            <button (click)="aumentarExtra(es)">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="alergenos-lista" *ngIf="producto.alergenos.length > 0">
+        <span class="alergeno-chip" *ngFor="let alergeno of producto.alergenos">
+          <img [src]="alergeno.icono" [alt]="alergeno.nombreEs" class="alergeno-icono" />
+          {{ alergeno.nombreEs }}
+        </span>
+      </div>
+
+      <div class="nota-bloque">
+        <h3>¿Petición especial?</h3>
+        <textarea [(ngModel)]="nota" placeholder="Ej: sin cebolla, salsa aparte..." rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <div class="selector-cantidad">
+        <button (click)="disminuir()" [disabled]="cantidad <= 1">−</button>
+        <span>{{ cantidad }}</span>
+        <button (click)="aumentar()">+</button>
+      </div>
+
+      <button class="boton-confirmar" (click)="confirmarAnadir()">
+        Añadir · {{ totalProducto.toFixed(2) }} €
+      </button>
+    </div>
+  </div>
+</div>
