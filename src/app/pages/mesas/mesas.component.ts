@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { trigger, transition, style, animate, stagger, query } from '@angular/animations';
 import { MesasService, MesaConEstado } from '../../services/mesas.service';
-import { PedidosService } from '../../services/pedidos.service';
+import { PedidosService, Pedido } from '../../services/pedidos.service';
 import { AuthService } from '../../services/auth.service';
 
 interface Posicion {
@@ -66,15 +66,25 @@ export class MesasComponent implements OnInit, OnDestroy {
     return this.mesasService.mesasConEstado().find((m) => m.id === this.mesaSeleccionadaId) ?? null;
   }
 
+  get pedidosDelDetalle(): Pedido[] {
+    const mesa = this.mesaSeleccionada;
+    if (!mesa || !mesa.sesionActual) return [];
+    return this.pedidosService
+      .listaPedidos()
+      .filter((p) => p.tipo === 'LOCAL' && p.sesionMesaId === mesa.sesionActual);
+  }
+
   ngOnInit() {
     this.pedidosService.cargarPedidosIniciales();
     this.pedidosService.conectarTiempoReal();
     this.mesasService.cargarMesas();
+    this.mesasService.conectarTiempoReal();
     document.body.classList.toggle('modo-oscuro', this.modoOscuro());
   }
 
   ngOnDestroy() {
     this.pedidosService.desconectar();
+    this.mesasService.desconectar();
   }
 
   alternarModoOscuro() {
@@ -121,17 +131,24 @@ export class MesasComponent implements OnInit, OnDestroy {
     return 'nivel-alto';
   }
 
-  todosServidos(mesa: MesaConEstado): boolean {
-    if (mesa.pedidosDeLaMesa.length === 0) return false;
-    return mesa.pedidosDeLaMesa.every((p) => p.estado === 'ENVIADO');
+  todosServidos(pedidos: Pedido[]): boolean {
+    if (pedidos.length === 0) return false;
+    return pedidos.every((p) => p.estado === 'ENVIADO');
   }
 
-  totalCuenta(mesa: MesaConEstado): number {
-    return mesa.pedidosDeLaMesa.reduce((suma, p) => suma + p.total, 0);
+  totalCuenta(pedidos: Pedido[]): number {
+    return pedidos.reduce((suma, p) => suma + p.total, 0);
   }
 
   seleccionarMesa(mesa: MesaConEstado) {
     this.mesaSeleccionadaId = mesa.id;
+
+    if (mesa.sesionActual) {
+      this.mesasService.cargarPedidosDeSesion(mesa.sesionActual).subscribe({
+        next: (pedidos) => this.pedidosService.mergePedidos(pedidos),
+        error: (err) => console.error('Error al cargar pedidos de la sesión', err),
+      });
+    }
   }
 
   cerrarDetalle() {

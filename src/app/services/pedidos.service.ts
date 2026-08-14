@@ -110,4 +110,15 @@ export class PedidosService {
       );
     });
   }
+
+  mergePedidos(nuevos: Pedido[]) {
+    this.zone.run(() => {
+      this.pedidos.update((actuales) => {
+        const idsExistentes = new Set(actuales.map((p) => p.id));
+        const soloNuevos = nuevos.filter((p) => !idsExistentes.has(p.id));
+        const actualizados = actuales.map((p) => nuevos.find((n) => n.id === p.id) ?? p);
+        return [...actualizados, ...soloNuevos];
+      });
+    });
+  }
 }

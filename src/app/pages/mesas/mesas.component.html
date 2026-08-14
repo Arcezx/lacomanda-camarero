@@ -66,8 +66,8 @@
       Esta mesa está libre, sin pedidos activos.
     </div>
 
-    <div *ngIf="mesaSeleccionada.ocupada && mesaSeleccionada.pedidosDeLaMesa.length > 0" class="cuenta-mesa">
-      <div class="pedido-bloque" *ngFor="let pedido of mesaSeleccionada.pedidosDeLaMesa">
+    <div *ngIf="mesaSeleccionada.ocupada && pedidosDelDetalle.length > 0" class="cuenta-mesa">
+      <div class="pedido-bloque" *ngFor="let pedido of pedidosDelDetalle">
         <div class="pedido-bloque-cabecera">
           <span>Pedido #{{ pedido.id }}</span>
           <span class="pedido-bloque-estado">{{ pedido.estado }}</span>
@@ -84,24 +84,29 @@
 
       <div class="cuenta-total-general">
         <span>Total de la cuenta</span>
-        <span>{{ totalCuenta(mesaSeleccionada).toFixed(2) }} €</span>
+        <span>{{ totalCuenta(pedidosDelDetalle).toFixed(2) }} €</span>
       </div>
 
       <button
         class="boton-pagar"
-        *ngIf="todosServidos(mesaSeleccionada)"
+        *ngIf="todosServidos(pedidosDelDetalle)"
         (click)="pagarCuenta()"
       >
         Pagar cuenta
       </button>
 
-      <p class="mensaje-esperando" *ngIf="!todosServidos(mesaSeleccionada)">
+      <p class="mensaje-esperando" *ngIf="!todosServidos(pedidosDelDetalle)">
         Esperando a que todos los pedidos estén servidos para poder cobrar.
       </p>
     </div>
-      <button class="boton-tomar-pedido" (click)="irATomarPedido()">
-        Tomar pedido
-      </button>
+
+    <div *ngIf="mesaSeleccionada.ocupada && pedidosDelDetalle.length === 0" class="mesa-libre-mensaje">
+      Esta mesa está marcada como ocupada manualmente, sin pedido asociado todavía.
+    </div>
+
+    <button class="boton-tomar-pedido" (click)="irATomarPedido()">
+      Tomar pedido
+    </button>
 
     <button class="boton-toggle-ocupacion" [class.liberar]="mesaSeleccionada.ocupada" (click)="alternarOcupacion()">
       {{ mesaSeleccionada.ocupada ? 'Liberar mesa' : 'Ocupar mesa' }}
