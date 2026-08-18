@@ -9,8 +9,8 @@ export interface MesaConEstado extends Mesa {
   pedidoActivo: Pedido | null;
 }
 
-const API_URL = 'http://localhost:8090/api';
-const WS_URL = 'http://localhost:8090/ws';
+const API_URL = 'https://lacomanda-backend.onrender.com/api';
+const WS_URL = 'https://lacomanda-backend.onrender.com/ws';
 
 @Injectable({
   providedIn: 'root',
@@ -40,11 +40,6 @@ export class MesasService {
     effect(() => {
       const pedidos = this.pedidosService.listaPedidos();
       const mesasActuales = this.mesas();
-
-      // Para cada mesa, si hay un pedido LOCAL activo cuya sesión no coincide
-      // con lo que tenemos guardado en memoria (o aún no tenemos ninguna),
-      // corregimos AMBOS campos base: ocupada Y sesionActual. Antes solo
-      // corregíamos ocupada, por eso la mesa se veía roja pero sin pedidos.
       const correcciones = new Map<number, { ocupada: boolean; sesionActual: string | null }>();
 
       for (const pedido of pedidos) {

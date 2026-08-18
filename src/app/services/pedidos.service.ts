@@ -37,8 +37,8 @@ export interface PedidoRequest {
   }[];
 }
 
-const API_URL = 'http://localhost:8090/api';
-const WS_URL = 'http://localhost:8090/ws';
+const API_URL = 'https://lacomanda-backend.onrender.com/api';
+const WS_URL = 'https://lacomanda-backend.onrender.com/ws';
 
 @Injectable({
   providedIn: 'root',

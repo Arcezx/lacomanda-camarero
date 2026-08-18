@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { Categoria } from '../models/categoria.model';
 import { Producto } from '../models/producto.model';
 
-const API_URL = 'http://localhost:8090/api';
+const API_URL = 'https://lacomanda-backend.onrender.com/api';
 
 @Injectable({
   providedIn: 'root',

@@ -15,7 +15,7 @@ export interface LoginResponse {
   rol: 'ADMIN' | 'CAMARERO';
 }
 
-const API_URL = 'http://localhost:8090/api';
+const API_URL = 'https://lacomanda-backend.onrender.com/api';
 const TOKEN_KEY = 'lacomanda_camarero_token';
 
 @Injectable({
