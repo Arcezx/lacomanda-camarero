@@ -1,59 +1,73 @@
-# LacomandaCamarero
+# LaComanda — Waiter View
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.27.
+Angular app for waiter staff at LaComanda. Lets waiters take orders on behalf of customers who prefer not to use their own phone, directly from a table-side device.
 
-## Development server
+🔗 **Live demo**: [lacomanda-camarero.netlify.app](https://lacomanda-camarero.netlify.app/)
+🔗 **Project page (with video walkthroughs)**: [crissdeev.netlify.app/proyecto-lacomanda](https://crissdeev.netlify.app/proyecto-lacomanda)
+🔗 **Related repos**: [backend](https://github.com/Arcezx/lacomanda-backend) · [digital menu](https://github.com/Arcezx/lacomanda-frontend) · [admin](https://github.com/Arcezx/lacomanda-admin) · [kitchen](https://github.com/Arcezx/lacomanda-cocina)
 
-To start a local development server, run:
+> ⏳ **Heads up**: the backend runs on Render's free tier. If it's been idle, the first request can take 30–60 seconds to wake up.
+
+## Test Credentials
+
+```
+Username: camarero1
+Password: camarero1123
+```
+
+## Features
+
+- Select a table to start or continue taking an order for it
+- Browse the menu by category, with allergen info per product
+- Customize products with extras before adding to the order
+- Review the full order summary before sending it to the kitchen — shared in real time with kitchen and the customer's own session
+
+## Tech Stack
+
+- **Framework**: Angular 19
+- **Real-time**: WebSocket (STOMP over SockJS, shared protocol with the rest of the system)
+- **Deployment**: Netlify
+
+## Architecture
+
+```
+src/app/
+├── guards/
+│   └── auth.guard.ts              Route protection
+├── components/
+│   └── producto-modal/            Product customization modal (extras)
+├── models/                        TypeScript interfaces (producto, mesa, extra...)
+├── pages/
+│   ├── login/                      Login page
+│   ├── mesas/                      Table selection
+│   ├── categoria-detalle/          Menu browsing by category
+│   ├── tomar-pedido/                Order-taking flow
+│   └── resumen-pedido/              Order summary & confirmation
+└── services/
+    ├── auth.service.ts
+    ├── auth-interceptor.interceptor.ts
+    ├── carrito.service.ts          Cart state
+    ├── carta.service.ts             Menu data
+    ├── mesas.service.ts             Table data
+    └── pedidos.service.ts           Order placement
+```
+
+## Running Locally
 
 ```bash
+git clone https://github.com/Arcezx/lacomanda-camarero.git
+cd lacomanda-camarero
+npm install
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Open `http://localhost:4200` in your browser.
 
-## Code scaffolding
+## Related Repositories
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+| Repo | Description |
+|---|---|
+| [lacomanda-backend](https://github.com/Arcezx/lacomanda-backend) | Spring Boot REST API |
+| [lacomanda-frontend](https://github.com/Arcezx/lacomanda-frontend) | Customer-facing digital menu |
+| [lacomanda-admin](https://github.com/Arcezx/lacomanda-admin) | Admin dashboard |
+| [lacomanda-cocina](https://github.com/Arcezx/lacomanda-cocina) | Kitchen view |
